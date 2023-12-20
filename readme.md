@@ -60,35 +60,35 @@ This list is short but it includes the most common and most useful projections.
     <th>Projection</th>
     <th>Type</th>
     <th>Example</th>
-    <th>Uses</th>
+    <th>Notes</th>
   </tr>
   <tr>
     <td>1</td>
-    <td>Azithumal Equidistant</td>
-    <td>Azithumal</td>
-    <td><img src="gallery/blue_marble/azimuthal_equidistant.png" alt="Azithumal Equidistant" width=70%/></td>
-    <td>Visual comparison of distances from a central location.</td>
+    <td>Azimuthal Equidistant</td>
+    <td>Azimuthal</td>
+    <td><img src="gallery/blue_marble/azimuthal_equidistant.png" alt="Azimuthal Equidistant" width=70%/></td>
+    <td>Distances from the centre are conserved. Visual comparison of distances from a central location.</td>
   </tr>
   <tr>
     <td>2</td>
     <td>Equirectangular</td>
     <td>Cylindrical</td>
     <td><img src="gallery/blue_marble/equirectangular.png" alt="Equirectangular" width=70%/></td>
-    <td>Standard data sharing format.</td>
+    <td>Distances along meridians are conserved. Standard data sharing format.</td>
   </tr>
   <tr>
     <td>3</td>
     <td>Cylindrical Equal Area</td>
     <td>Cylindrical</td>
     <td><img src="gallery/blue_marble/cylindrical_equal_area.png" alt="cylindrical equal area" width=70%/></td>
-    <td>Calculating areas.</td>
+    <td>Areas are conserved.</td>
   </tr>
   <tr>
     <td>4</td>
     <td>Mercator</td>
     <td>Cylindrical</td>
     <td><img src="gallery/blue_marble/mercator.png" alt="Mercator" width=75%/></td>
-    <td>Conformal map. Navigation. Not recommended for global representations.</td>
+    <td>Conformal map. Lines of constant bearing are straight which aids navigation. Not recommended for global representations.</td>
   </tr>
   <tr>
     <td>5</td>
@@ -109,7 +109,7 @@ This list is short but it includes the most common and most useful projections.
     <td>Transverse Mercator</td>
     <td>Cylindrical</td>
     <td><img src="gallery/blue_marble/transverse_mercator.png" alt="Transverse Mercator" width=75%/></td>
-    <td>Correcting local distortions. Only recommended within ±15° of the central longitude line.</td>
+    <td>Conformal map. Distances along the central meridian are conserved. Commonly used for correcting local distortions within ±15° of the central meridian.</td>
   </tr>
 </table>
 

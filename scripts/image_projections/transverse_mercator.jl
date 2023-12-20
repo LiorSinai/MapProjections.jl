@@ -2,28 +2,36 @@ println("TransverseMercator")
 
 dest_proj = TransverseMercator(;k=1.0, long0=0.0)
 
+height, width = size(img)
 west_boundary = -90.0 + dest_proj.long0
 east_boundary = 90.0 + dest_proj.long0
 j, i = inv(src_affine)((west_boundary, 0.0))
 j_west = floor(Int, j)
 j, i = inv(src_affine)((east_boundary, 0.0))
 j_east = floor(Int, j)
-if j_west < 0
-    j_west, j_east = j_east, width + j_west
+if j_west < 0 
+    js = vcat((width + j_west):width, 1:(j_east))
+    js_back = (j_east - 1):(width + j_west + 1) # slight overlap
+    j_west += width
 elseif j_east > width
-    j_west, j_east = j_east - width , j_west
+    js = vcat(j_west:width, 1:(j_east - width))
+    js_back = (j_east - width - 1):(j_west + 1) # slight overlap
+    j_east -= width
+else
+    js = j_west:j_east
+    js_back = vcat((j_east-1):width, 1:(j_west+1)) # slight overlap
 end
 println("cropped j: ", j_west, "-", j_east)
+println(length(js), " ", length(js_back))
 
-height, width = size(img)
-img_cropped = img[1:end, j_west:j_east];
-img_back = hcat(img[1:end, j_east:end], img[1:end, 1:j_west]); # back of sphere
+img_cropped = img[1:end, js];
+img_back = img[1:end, js_back]
 img_front = img_cropped; # front of sphere
 
-height, width = size(img_cropped)
-crop_affine = affine_from_bounds(west_boundary, lat_min, east_boundary, lat_max, width, height)
+height_crop, width_crop = size(img_cropped)
+crop_affine = affine_from_bounds(west_boundary, lat_min, east_boundary, lat_max, width_crop, height_crop)
 width_dest, height_dest, dest_affine = 
-    calculate_suggested_transform(src_proj, dest_proj, width, height, crop_affine)
+    calculate_suggested_transform(src_proj, dest_proj, width_crop, height_crop, crop_affine)
 println("Source:      ($height, $width)")
 println("Destination: ($height_dest, $width_dest)")
 
@@ -48,7 +56,7 @@ canvas = plot(
     )
 
 gridlines = make_grid_lines(
-    dest_affine, dest_proj, -180.0:30.0:180.0, -90:30.0:90;num_points=1000
+    dest_affine, dest_proj, -180.0:30.0:180.0, -90:30.0:90; num_points=1000
     );
 for line in gridlines
     xs = [xy[1] for xy in line]

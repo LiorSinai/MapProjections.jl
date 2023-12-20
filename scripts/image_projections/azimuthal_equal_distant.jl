@@ -1,3 +1,9 @@
+let src_proj=src_proj, 
+    src_affine=src_affine,
+    img=img,
+    max_figure_size=max_figure_size,
+    output_dir=output_dir
+
 println("AzimuthalEquidistant")
 
 dest_proj = AzimuthalEquidistant(;lat0=90.0, long0=0.0)
@@ -35,3 +41,5 @@ output_path = joinpath(output_dir, "azimuthal_equidistant.png")
 result = savefig(canvas, output_path)
 println("saved image to $result")
 println("")
+
+end

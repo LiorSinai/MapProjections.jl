@@ -1,5 +1,11 @@
 using MapProjections: bound_longitude
 
+let src_proj=src_proj, 
+    src_affine=src_affine,
+    img=img,
+    max_figure_size=max_figure_size,
+    output_dir=output_dir
+
 println("EllipsoidalTransverseMercator")
 dest_proj = EllipsoidalTransverseMercator(;long0=0.0, semi_major_axis=1.0)
 
@@ -58,3 +64,5 @@ output_path = joinpath(output_dir, "transverse_mercator_ellipsoidal.png")
 result = savefig(canvas, output_path)
 println("saved image to $result")
 println("")
+
+end

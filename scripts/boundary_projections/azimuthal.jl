@@ -1,3 +1,8 @@
+let src_proj=src_proj, 
+    features=features,
+    max_figure_size=max_figure_size,
+    output_dir=output_dir
+
 println("AzimuthalEquidistant")
 
 dest_proj = AzimuthalEquidistant(;long0=0.0, lat0=90.0, radius=1.0)
@@ -27,3 +32,7 @@ output_path = joinpath(output_dir, "azimuthal_equidistant.png")
 result = savefig(canvas, output_path)
 println("saved image to $result")
 println("")
+
+x = 5
+
+end

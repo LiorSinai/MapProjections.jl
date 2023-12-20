@@ -1,5 +1,9 @@
-println("CylindricalEqualArea")
+let src_proj=src_proj, 
+    features=features,
+    max_figure_size=max_figure_size,
+    output_dir=output_dir
 
+println("CylindricalEqualArea")
 
 dest_proj = CylindricalEqualArea(;k=1.0, radius=1.0)
 
@@ -26,3 +30,5 @@ output_path = joinpath(output_dir, "cylindrical_equal_area.png")
 result = savefig(canvas, output_path)
 println("saved image to $result")
 println("")
+
+end

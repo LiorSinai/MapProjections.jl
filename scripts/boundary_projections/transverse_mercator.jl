@@ -95,6 +95,11 @@ function maybe_add_infinity!(geometry::GeoJSON.MultiPolygon, projected::GeoJSON.
     added_infinity
 end
 
+let src_proj=src_proj, 
+    features=features,
+    max_figure_size=max_figure_size,
+    output_dir=output_dir
+
 println("TransverseMercator")
 
 # Doesn't work well for all angles. (-170, -140) is problematic
@@ -138,3 +143,5 @@ output_path = joinpath(output_dir, "transverse_mercator.png")
 result = savefig(canvas, output_path)
 println("saved image to $result")
 println("")
+
+end

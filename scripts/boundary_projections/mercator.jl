@@ -24,6 +24,11 @@ function filter_latitudes(
     GeoJSON.MultiPolygon{D, T}(nothing, coords)
 end
 
+let src_proj=src_proj, 
+    features=features,
+    max_figure_size=max_figure_size,
+    output_dir=output_dir
+
 println("Mercator")
 
 dest_proj = Mercator(;radius=1.0)
@@ -56,3 +61,5 @@ output_path = joinpath(output_dir, "mercator.png")
 result = savefig(canvas, output_path)
 println("saved image to $result")
 println("")
+
+end

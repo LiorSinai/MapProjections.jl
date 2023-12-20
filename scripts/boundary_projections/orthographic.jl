@@ -42,6 +42,11 @@ function filter_angular_range(feature::GeoJSON.Feature, long0, lat0; options...)
     filter_angular_range(feature.geometry, long0, lat0; options...)
 end
 
+let src_proj=src_proj, 
+    features=features,
+    max_figure_size=max_figure_size,
+    output_dir=output_dir
+
 println("Orthographic")
 
 dest_proj = Orthographic(;long0=0.0, lat0=15.0, radius=1.0)
@@ -82,3 +87,5 @@ output_path = joinpath(output_dir, "orthographic.png")
 result = savefig(canvas, output_path)
 println("saved image to $result")
 println("")
+
+end

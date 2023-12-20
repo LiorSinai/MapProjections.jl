@@ -1,3 +1,8 @@
+let src_proj=src_proj, 
+    features=features,
+    max_figure_size=max_figure_size,
+    output_dir=output_dir
+
 using MapProjections: bound_longitude
 
 function filter_longitudes(
@@ -79,3 +84,5 @@ output_path = joinpath(output_dir, "transverse_mercator_ellipsoidal.png")
 result = savefig(canvas, output_path)
 println("saved image to $result")
 println("")
+
+end

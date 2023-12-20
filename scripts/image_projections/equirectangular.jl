@@ -1,3 +1,9 @@
+let src_proj=src_proj, 
+    src_affine=src_affine,
+    img=img,
+    max_figure_size=max_figure_size,
+    output_dir=output_dir
+
 println("Equirectangular")
 
 figure_size = (max_figure_size, ceil(Int, max_figure_size/2))
@@ -25,3 +31,5 @@ output_path = joinpath(output_dir, "equirectangular.png")
 result = savefig(canvas, output_path)
 println("saved image to $result")
 println("")
+
+end

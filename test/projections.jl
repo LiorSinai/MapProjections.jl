@@ -172,3 +172,14 @@ end
     coords_back = project(proj_inv, coords_dest) 
     @test all(coords_back .≈ coords_src)
 end
+
+@testset "transverse Mercator - ellipsoidal" begin
+    proj = EllipsoidalTransverseMercator(;k=1.0)
+    coords_src = (20.0, 30.0) # degrees
+    coords_dest = proj(coords_src)
+    @test all(coords_dest .≈ (1.9493203263843143e6, 3.49472588647365e6))
+
+    proj_inv = inv(proj)
+    coords_back = project(proj_inv, coords_dest) 
+    @test all(coords_back .≈ coords_src)
+end

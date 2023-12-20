@@ -111,6 +111,14 @@ This list is short but it includes the most common and most useful projections.
     <td><img src="gallery/blue_marble/transverse_mercator.png" alt="Transverse Mercator" width=75%/></td>
     <td>Conformal map. Distances along the central meridian are conserved. Commonly used for correcting local distortions within ±15° of the central meridian.</td>
   </tr>
+  <tr>
+    <td>7</td>
+    <td>Transverse Mercator<br>(Gauss–Krüger)</td>
+    <td>Cylindrical</td>
+    <td><img src="gallery/blue_marble/transverse_mercator_ellipsoidal.png" alt="Ellipsoidal Transverse Mercator" width=75%/></td>
+    <td>An ellipsoidal version of the transverse Mercator. The Gauss–Krüger approximation equations are used. Because of their numerical instability it is not recommended for more than 45° on either side of the central meridian.
+    While the exact solution has a finite map, these approximations tend to infinity at the poles.</td>
+  </tr>
 </table>
 
 ## Local development (optional)

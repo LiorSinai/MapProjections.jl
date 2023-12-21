@@ -4,6 +4,8 @@ using MapProjections: CubicSpline, SplineRoots
 
 using Test
 
+@testset verbose = true "Interpolation" begin
+
 @testset "linear interpolation" begin
     x1, y1, x2, y2 = 0.6, 10.0, 0.8, 15.5
 
@@ -128,4 +130,6 @@ end
     @test y_interp ≈ 22.678032
     root = inv_spline(y_interp)
     @test isapprox(root, 5.32; atol=1e-6)
+end
+
 end

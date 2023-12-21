@@ -2,6 +2,8 @@ using MapProjections
 using MapProjections: CubicSpline, LinearSpline
 using Test
 
+@testset verbose = true "Projections" begin
+
 @testset "WGS-84" begin
     proj = WorldGeodeticSystem84()
     coords_src = (20.0f0, 30.0f0) # degrees
@@ -186,4 +188,6 @@ end
     proj_inv = inv(proj)
     coords_back = project(proj_inv, coords_dest) 
     @test all(coords_back .≈ coords_src)
+end
+
 end

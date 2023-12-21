@@ -1,11 +1,11 @@
-function linear_interpolation(x1::AbstractFloat, y1::AbstractFloat, x2::AbstractFloat, y2::AbstractFloat, x::AbstractFloat)
+function linear_interpolation(x1::Real, y1::Real, x2::Real, y2::Real, x::Real)
     grad = (y2 - y1) / (x2 - x1)
     inter = (y1 * x2 - y2 * x1) / (x2 - x1)
     grad * x + inter
 end
 
 function _get_interval_idx(
-    nodes::AbstractVector, x
+    nodes::AbstractVector, x::Real
     )
     idx = 2
     # assume nodes are ordered.
@@ -43,14 +43,16 @@ end
 LinearInterpolater() = LinearInterpolater(Float64[], Float64[])
 similar(::LinearInterpolater, xs, ys) = LinearInterpolater(xs, ys)
 
-function interpolate(interpolator::LinearInterpolater, x)
+inv(interpolater::LinearInterpolater) = LinearInterpolater(interpolater.values, interpolater.intervals)
+
+function interpolate(interpolator::LinearInterpolater, x::Real)
     idx = _get_interval_idx(interpolator.intervals, x)
     xs = interpolator.intervals
     ys = interpolator.values
     linear_interpolation(xs[idx - 1], ys[idx - 1], xs[idx], ys[idx], x)
 end
 
-(interpolator::LinearInterpolater)(x) = interpolate(interpolator, x)
+(interpolator::LinearInterpolater)(x::Real) = interpolate(interpolator, x)
 
 function show(io::IO, mime::MIME"text/plain", interpolator::LinearInterpolater)
     print(io, "LinearInterpolater(")
@@ -73,7 +75,7 @@ Sources:
 - https://en.wikipedia.org/wiki/Lagrange_polynomial
 """
 function lagrange_polynomial(
-    nodes::AbstractVector{<:AbstractFloat}, values::AbstractVector{<:AbstractFloat}, x::AbstractFloat
+    nodes::AbstractVector{<:Real}, values::AbstractVector{<:Real}, x::Real
     )
     n = length(nodes)
     y = 0.0
@@ -99,7 +101,7 @@ Sources:
 - https://en.wikipedia.org/wiki/Neville%27s_algorithm
 """
 function nevilles_algorithm(
-    nodes::AbstractVector{<:AbstractFloat}, values::AbstractVector{<:AbstractFloat}, x::AbstractFloat
+    nodes::AbstractVector{<:Real}, values::AbstractVector{<:Real}, x::Real
     )
     n = length(nodes)
     _nevilles_algorithm(nodes, values, x, 1, n)
@@ -136,7 +138,7 @@ struct CubicSpline{V<:AbstractVector}
     intervals::V
 end
 
-function CubicSpline(xs::AbstractVector{T}, ys::AbstractVector{T}) where T
+function CubicSpline(xs::AbstractVector{T}, ys::AbstractVector{T}) where T<:Real
     @assert length(xs) == length(ys)
     n = length(xs)
     col = 1:(n-1)
@@ -164,14 +166,17 @@ end
 CubicSpline() = CubicSpline(zeros(0, 0), zeros(0))
 similar(::CubicSpline, xs, ys) = CubicSpline(xs, ys)
 
-function interpolate(spline::CubicSpline, x)
+inv(spline::CubicSpline) = 
+    SplineRoots(spline.coefficients, spline.intervals, map(spline, spline.intervals))
+
+function interpolate(spline::CubicSpline, x::Real)
     j = _get_interval_idx(spline.intervals, x) - 1
     coeffs = spline.coefficients[:, j]
     xj = spline.intervals[j]
     polynomial(coeffs, x - xj)
 end
 
-(spline::CubicSpline)(x) = interpolate(spline, x)
+(spline::CubicSpline)(x::Real) = interpolate(spline, x)
  
 function show(io::IO, mime::MIME"text/plain", spline::CubicSpline)
     print(io, "CubicSpline")
@@ -180,7 +185,32 @@ function show(io::IO, mime::MIME"text/plain", spline::CubicSpline)
     show(io, mime, spline.coefficients)
 end
 
-function polynomial(coefficients::AbstractVector, x)
+struct SplineRoots{V1<:AbstractVector, V2<:AbstractVector}
+    coefficients::Matrix
+    node_intervals::V1
+    value_intervals::V2
+end
+
+function interpolate(inv_spline::SplineRoots, y::Real; num_guesses::Int=5, newton_options...)
+    j = _get_interval_idx(inv_spline.value_intervals, y) - 1
+    coeffs = inv_spline.coefficients[:, j]
+    coeffs[1] -= y
+    xj = inv_spline.node_intervals[j]
+    xk = inv_spline.node_intervals[j + 1]
+    r = range(xj, xk, num_guesses)
+    root = polynomial_root(coeffs, r, xj; newton_options...)
+    if !(root >= xj) || !(root <= xk)
+        throw(DomainError(root, "root not in interval range ($xj, $xk)"))
+    end
+    root
+end
+
+(inv_spline::SplineRoots)(x::Real) = interpolate(inv_spline, x)
+
+
+## Polynomials
+
+function polynomial(coefficients::AbstractVector, x::Real)
     result = 0.0
     xpow = 1.0
     for coeff in coefficients
@@ -190,3 +220,36 @@ function polynomial(coefficients::AbstractVector, x)
     result
 end
 
+function polynomial_grad(coefficients::AbstractVector, x::Real)
+    result = 0.0
+    xpow = 1.0
+    for (exponent_minus_1, coeff) in enumerate(coefficients[2:end])
+        result += exponent_minus_1 * coeff * xpow
+        xpow *= x
+    end
+    result
+end
+
+function polynomial_root(coefficients::AbstractVector, range_::AbstractRange, offset::Real=0.0; options...)
+    x0 = argmin(x -> abs(polynomial(coefficients, x - offset)), range_)
+    newtons_method_polynomial(coefficients, x0, offset; options...)
+end
+
+function newtons_method_polynomial(
+    coefficients::AbstractVector, x0::Real, offset::Real=0.0
+    ; atol::AbstractFloat=1e-6, max_iters::Int=10
+    )
+    xi = x0
+    yi = polynomial(coefficients, xi - offset)
+    iters = 0
+    while iters <= max_iters && abs(yi) > atol
+        iters += 1
+        ygrad = polynomial_grad(coefficients, xi - offset)
+        if abs(ygrad) < atol 
+            return NaN # failure
+        end
+        xi = xi - yi / ygrad
+        yi = polynomial(coefficients, xi - offset)
+    end
+    xi
+end

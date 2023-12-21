@@ -1,6 +1,6 @@
 using MapProjections: linear_interpolation, LinearInterpolater
 using MapProjections: lagrange_polynomial, nevilles_algorithm
-using MapProjections: CubicSpline
+using MapProjections: CubicSpline, SplineRoots
 
 using Test
 
@@ -111,11 +111,21 @@ end
     values = [5.0, 7.0, 11.0, 34.0]
     spline = CubicSpline(nodes, values)
 
-    spline_inv = CubicSpline(values, nodes)
-
-    ys = [spline(x) for x in nodes]
+    ys = map(spline, nodes)
     @test ys == values
 
     y_interp = spline(0.0)
     @test y_interp ≈ 6.0890804597701145
+
+    inv_spline = SplineRoots(spline.coefficients, spline.intervals, map(spline, spline.intervals))
+    xs = map(inv_spline, values)
+    @test xs == nodes
+
+    root = inv_spline(y_interp)
+    @test isapprox(root, 0.0; atol=1e-9)
+
+    y_interp = spline(5.32)
+    @test y_interp ≈ 22.678032
+    root = inv_spline(y_interp)
+    @test isapprox(root, 5.32; atol=1e-6)
 end

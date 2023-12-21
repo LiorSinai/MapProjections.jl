@@ -3,8 +3,12 @@
     Robinson(;long0=0.0f0, k=1.0f0, radius=MEAN_RADIUS_WGS_84, interpolator=CubicSpline())
 
 Artistic projection of the entire sphere. 
-
 It is used for visually appealing maps of the whole earth.
+
+The interpolator should either be `CubicSpline()` or `LinearInterpolater()`. 
+`CubicSpline()` gives slightly smoother results near the poles but is about `2x` slower in the forward direction
+and about `5x` slower in the inverse direction.
+The relative results differ by less than 0.08% below 80° and up to a maximum of 0.16% near 82.2°.
 
 The equations satisfy:
 ```math
@@ -43,6 +47,12 @@ struct Robinson{T<:AbstractFloat, IX, IY} <: AbstractProjection
     end
 end
 
+function inv(proj::Robinson) 
+    interpolatorX = proj.interpolatorX
+    invInterpolatorY = inv(proj.interpolatorY)
+    InverseRobinson(proj.radius, proj.long0, interpolatorX, invInterpolatorY)
+end
+
 function Robinson(
     ;long0::AbstractFloat=0.0f0, k::AbstractFloat=1.0f0, radius::AbstractFloat=MEAN_RADIUS_WGS_84,
     interpolator=CubicSpline()
@@ -76,29 +86,12 @@ end
     InverseRobinson(radius, long0, interpolatorX, invInterpolatorY)
 
 Convert `(x, y)` co-ordinates in a `Robinson` projection back to `(longitude, latitude)`. 
-
-Only a `LinearInterpolater` is currently supported.
 """
 struct InverseRobinson{T<:AbstractFloat, IX, IY} <: AbstractProjection
     radius::T
     long0::T
     interpolatorX::IX
     invInterpolatorY::IY
-end
-
-function inv(proj::Robinson) 
-    latitudes = 0.0:5.0:90.0
-    X = [
-        1.0000, 0.9986, 0.9954, 0.9900, 0.9822, 0.9730, 0.9600, 0.9427, 0.9216, 0.8962,
-        0.8679, 0.8350, 0.7986, 0.7597, 0.7186, 0.6732, 0.6213, 0.5722, 0.5322
-    ]
-    Y = [
-        0.0000, 0.0620, 0.1240, 0.1860, 0.2480, 0.3100, 0.3720, 0.4340, 0.4958, 0.5571, 
-        0.6176, 0.6769, 0.7346, 0.7903, 0.8435, 0.8936, 0.9394, 0.9761, 1.0000
-    ]
-    interpolatorX = LinearInterpolater(latitudes, X)
-    invInterpolatorY = LinearInterpolater(Y, latitudes)
-    InverseRobinson(proj.radius, proj.long0, interpolatorX, invInterpolatorY)
 end
 
 function project(proj::InverseRobinson{T1}, xy::Tuple{T2, T2}) where {T1,T2 <: AbstractFloat}

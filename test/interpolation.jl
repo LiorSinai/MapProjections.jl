@@ -1,6 +1,4 @@
-using MapProjections: linear_interpolation, LinearSpline
-using MapProjections: lagrange_polynomial, nevilles_algorithm
-using MapProjections: CubicSpline, SplineRoots
+using MapProjections.Interpolation
 
 using Test
 

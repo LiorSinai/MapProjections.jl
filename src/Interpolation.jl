@@ -1,3 +1,11 @@
+module Interpolation
+
+export interpolate, linear_interpolation
+export LinearSpline, CubicSpline, SplineRoots
+export lagrange_polynomial, nevilles_algorithm
+export polynomial, polynomial_grad, polynomial_root
+import Base: inv, similar
+
 function linear_interpolation(x1::Real, y1::Real, x2::Real, y2::Real, x::Real)
     grad = (y2 - y1) / (x2 - x1)
     inter = (y1 * x2 - y2 * x1) / (x2 - x1)
@@ -45,19 +53,19 @@ similar(::LinearSpline, xs, ys) = LinearSpline(xs, ys)
 
 inv(interpolater::LinearSpline) = LinearSpline(interpolater.values, interpolater.intervals)
 
-function interpolate(interpolator::LinearSpline, x::Real)
-    idx = _get_interval_idx(interpolator.intervals, x)
-    xs = interpolator.intervals
-    ys = interpolator.values
+function interpolate(spline::LinearSpline, x::Real)
+    idx = _get_interval_idx(spline.intervals, x)
+    xs = spline.intervals
+    ys = spline.values
     linear_interpolation(xs[idx - 1], ys[idx - 1], xs[idx], ys[idx], x)
 end
 
-(interpolator::LinearSpline)(x::Real) = interpolate(interpolator, x)
+(spline::LinearSpline)(x::Real) = interpolate(spline, x)
 
-function show(io::IO, mime::MIME"text/plain", interpolator::LinearSpline)
+function show(io::IO, mime::MIME"text/plain", spline::LinearSpline)
     print(io, "LinearSpline(")
-    print(io, interpolator.intervals, ", ")
-    print(io, interpolator.values)
+    print(io, spline.intervals, ", ")
+    print(io, spline.values)
     print(io, ")")
 end
 
@@ -252,4 +260,6 @@ function newtons_method_polynomial(
         yi = polynomial(coefficients, xi - offset)
     end
     xi
+end
+
 end

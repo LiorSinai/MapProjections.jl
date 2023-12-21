@@ -11,9 +11,12 @@ export AzimuthalEquidistant, CylindricalEqualArea, Mercator,
 export project
 export reproject, reproject_warp, calculate_suggested_transform
 
+include("Interpolation.jl")
+using .Interpolation
+
+
 include("affine.jl")
 include("bounds.jl")
-include("interpolation.jl")
 include("projection.jl")
 include("recentre.jl")
 include("reproject.jl")

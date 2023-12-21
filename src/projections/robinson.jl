@@ -5,7 +5,7 @@
 Artistic projection of the entire sphere. 
 It is used for visually appealing maps of the whole earth.
 
-The interpolator should either be `CubicSpline()` or `LinearInterpolater()`. 
+The interpolator should either be `CubicSpline()` or `LinearSpline()`. 
 `CubicSpline()` gives slightly smoother results near the poles but is about `2x` slower in the forward direction
 and about `5x` slower in the inverse direction.
 The relative results differ by less than 0.08% below 80° and up to a maximum of 0.16% near 82.2°.

@@ -1,4 +1,4 @@
-using MapProjections: linear_interpolation, LinearInterpolater
+using MapProjections: linear_interpolation, LinearSpline
 using MapProjections: lagrange_polynomial, nevilles_algorithm
 using MapProjections: CubicSpline, SplineRoots
 
@@ -22,21 +22,21 @@ using Test
     @test y_interp ≈ 34.75
 end
 
-@testset "LinearInterpolater" begin
+@testset "LinearSpline" begin
     nodes = [-2.0, 1.0, 3.0, 7.0]
     values = [5.0, 7.0, 11.0, 34.0]
 
-    interpolater = LinearInterpolater(nodes, values)
+    interpolater = LinearSpline(nodes, values)
 
     y_interp = interpolater(0.0)
     @test y_interp == (6 + 1/3)
 end
 
-@testset "LinearInterpolater - reverse" begin
+@testset "LinearSpline - reverse" begin
     nodes = 10:-1.0:0.0
     values = nodes.^2 .+ nodes .+ 3
 
-    interpolater = LinearInterpolater(nodes, values)
+    interpolater = LinearSpline(nodes, values)
 
     y_interp = interpolater(6.3)
     actual = 48.99

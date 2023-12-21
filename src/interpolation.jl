@@ -17,7 +17,7 @@ function _get_interval_idx(
 end
 
 """
-    LinearInterpolater(intervals, values)
+    LinearSpline(intervals, values)
 
 Linear interpolation between intervals.
 
@@ -27,10 +27,10 @@ Linear interpolation between intervals.
 
 Assumes `intervals` are ordered.
 """
-struct LinearInterpolater{V1<:AbstractVector, V2<:AbstractVector}
+struct LinearSpline{V1<:AbstractVector, V2<:AbstractVector}
     intervals::V1
     values::V2
-    function LinearInterpolater(intervals::AbstractVector, values::AbstractVector)
+    function LinearSpline(intervals::AbstractVector, values::AbstractVector)
         idxs = sortperm(intervals)
         sorted_intervals = intervals[idxs]
         sorted_values = values[idxs]
@@ -40,22 +40,22 @@ struct LinearInterpolater{V1<:AbstractVector, V2<:AbstractVector}
     end
 end
 
-LinearInterpolater() = LinearInterpolater(Float64[], Float64[])
-similar(::LinearInterpolater, xs, ys) = LinearInterpolater(xs, ys)
+LinearSpline() = LinearSpline(Float64[], Float64[])
+similar(::LinearSpline, xs, ys) = LinearSpline(xs, ys)
 
-inv(interpolater::LinearInterpolater) = LinearInterpolater(interpolater.values, interpolater.intervals)
+inv(interpolater::LinearSpline) = LinearSpline(interpolater.values, interpolater.intervals)
 
-function interpolate(interpolator::LinearInterpolater, x::Real)
+function interpolate(interpolator::LinearSpline, x::Real)
     idx = _get_interval_idx(interpolator.intervals, x)
     xs = interpolator.intervals
     ys = interpolator.values
     linear_interpolation(xs[idx - 1], ys[idx - 1], xs[idx], ys[idx], x)
 end
 
-(interpolator::LinearInterpolater)(x::Real) = interpolate(interpolator, x)
+(interpolator::LinearSpline)(x::Real) = interpolate(interpolator, x)
 
-function show(io::IO, mime::MIME"text/plain", interpolator::LinearInterpolater)
-    print(io, "LinearInterpolater(")
+function show(io::IO, mime::MIME"text/plain", interpolator::LinearSpline)
+    print(io, "LinearSpline(")
     print(io, interpolator.intervals, ", ")
     print(io, interpolator.values)
     print(io, ")")

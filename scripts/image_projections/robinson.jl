@@ -6,7 +6,7 @@ let src_proj=src_proj,
 
 println("Robinson")
 
-dest_proj = Robinson(;k=1.0, long0=0.0, interpolator=MapProjections.LinearInterpolater())
+dest_proj = Robinson(;k=1.0, long0=0.0, interpolator=MapProjections.LinearSpline())
 height, width = size(img)
 width_dest, height_dest, dest_affine = 
     calculate_suggested_transform(src_proj, dest_proj, width, height, src_affine)

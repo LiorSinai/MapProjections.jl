@@ -1,5 +1,5 @@
 using MapProjections
-using MapProjections: CubicSpline, LinearInterpolater
+using MapProjections: CubicSpline, LinearSpline
 using Test
 
 @testset "WGS-84" begin
@@ -122,7 +122,7 @@ end
     coords_back = proj_inv(coords_dest) 
     @test all(coords_back .≈ coords_src)
 
-    proj = Robinson(1.0, 0.0, LinearInterpolater())
+    proj = Robinson(1.0, 0.0, LinearSpline())
     coords_dest = proj(coords_src)
     @test coords_dest ==  (0.28440209974417663, 0.5030556)
 

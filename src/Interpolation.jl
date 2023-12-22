@@ -30,7 +30,7 @@ end
 Linear interpolation between intervals.
 
 ```
-    y = (y1*(x2-x)-y2*(x1-x))/(x2-x1) where xs[idx] < x < xs[idx+1]
+    y = (y2-y1)/(x2-x1)*(x-x1) + y1 where xs[idx] < x < xs[idx+1]
 ```
 """
 struct LinearSpline{V<:AbstractVector, M<:AbstractMatrix}

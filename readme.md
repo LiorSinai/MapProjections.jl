@@ -6,48 +6,22 @@ Custom implementations of map common map projections.
 All these projections are supported with forward and inverse equations.
 
 The forward equations are used for directly transforming data of `(longitude, latitude)` pairs.
-This is for example useful for boundary data.
+This is for example useful for boundary data in `(longitude, latitude)` format.
 For a gallery of examples, see [gallery/boundaries](gallery/boundaries).
 
-The `reproject_warp` function is used for image warping. It is a simple wrapper around `ImageTransformations.warp`.
-This function uses the backwards method which requires the inverse equations.
+The inverse equations are used to convert back to `(longitude, latitude)` pairs.
+This is useful for reprojecting from one coordinate system to another.
+For example, from converting from multiple source Coordinate Reference Systems (CRSs) to a single, common CRS.
+The inverse equations for the source projection are first applied followed by the forward equations of the destination projection.
+
+The `reproject_warp` function is used for image warping. It is a simple wrapper around [ImageTransformations.warp](https://github.com/JuliaImages/ImageTransformations.jl).
+This function uses the backwards method which requires the inverse equations for the destination projection and the forward equations for the source projection.
 For a gallery of examples, see [gallery/blue_marble](gallery/blue_marble) or the table below.
 
 Caveats:
 - This package does not automatically integrate with rasters. Rasters usually come with projection and dimension information. See [Rasters.jl](https://github.com/rafaqz/Rasters.jl/) for a package for reading raster data.
 - This package does not support reading standard CRS formats.
-- Only the spherical versions of projection equations are implemented. This is particularly relevant to the Mercator and Transverse Meractor projections. 
-
-Coordinate example:
-```julia
-using MapProjections
-proj = TransverseMercator(;k=1.0)
-coords_src = (20.0, 30.0) # degrees
-coords_dest = proj(coords_src) # (1.95e6, 3.51e6)
-proj_inv = inv(proj) # InverseTransverseMercator
-coords_back = proj_inv(coords_dest) # (20.0, 30.0)
-```
-
-Image warping example:
-```julia
-using MapProjections
-using MapProjections: affine_from_bounds
-using Images
-using ImageTransformations: BSpline, Linear
-img = load("data/Blue_Marble_2002.png")
-height, width = size(img)
-src_affine = affine_from_bounds(-180.0, -90.0, 180.0, 90.0, width, height)
-src_proj = WorldGeodeticSystem84()
-dest_proj = Robinson(;k=1.0)
-width_dest, height_dest, dest_affine = 
-    calculate_suggested_transform(src_proj, dest_proj, width, height, src_affine)
-bilinear = BSpline(Linear())
-out_img = reproject_warp(
-    img, (height_dest, width_dest), src_proj, dest_proj, src_affine, dest_affine
-    ; method=bilinear
-)
-save("Robinson.png", out_img)
-```
+- For the most, only the spherical versions of projection equations are implemented. An ellipsoidal approximation is implemented for the transverse Mercator projection.
 
 ## Projections
 
@@ -121,6 +95,49 @@ This list is short but it includes the most common and most useful projections.
   </tr>
 </table>
 
+## Examples
+
+Coordinate example:
+```julia
+using MapProjections
+proj = TransverseMercator(;k=1.0)
+coords_src = (20.0, 30.0) # degrees
+coords_dest = proj(coords_src) # (1.95e6, 3.51e6)
+proj_inv = inv(proj) # InverseTransverseMercator
+coords_back = proj_inv(coords_dest) # (20.0, 30.0)
+```
+
+Image warping example:
+```julia
+using MapProjections
+using MapProjections: affine_from_bounds
+using Images
+using ImageTransformations: BSpline, Linear
+img = load("data/Blue_Marble_2002.png")
+height, width = size(img)
+src_affine = affine_from_bounds(-180.0, -90.0, 180.0, 90.0, width, height)
+src_proj = WorldGeodeticSystem84()
+dest_proj = Robinson(;k=1.0)
+width_dest, height_dest, dest_affine = 
+    calculate_suggested_transform(src_proj, dest_proj, width, height, src_affine)
+out_img = reproject_warp(
+    img, (height_dest, width_dest), src_proj, dest_proj, src_affine, dest_affine
+    ; method=BSpline(Linear())
+)
+save("Robinson.png", out_img)
+```
+
+<p align="center">
+  <img src="gallery/contours_azimuthal.png" width="25%" style="padding:5px"/>
+  <img src="gallery/contours_robinson.png" width="50%"  style="padding:5px"/> 
+</p>
+
+Reprojection can be used to transform objects which are easy to plot in one CRS to another CRS.
+For example, circles in the Azimuthal Equidistant projection signify points of equal distance from the origin.
+This is useful for comparing flight distances to different destinations.
+These contours can then be reprojected to a global projection like Robinson for a more natural view.
+
+
 ## Local development (optional)
 
 ```julia-repl
@@ -160,9 +177,9 @@ Many of them are a result of edge behaviour near poles and at singularities.
 
 - Holes are currently not supported in `Plots.Shape`. The scripts only plot the outline of holes. This is for example evident with Lesotho which is effectively plotted twice: once in South Africa and once for Lesotho itself.
 - Azimuthal equidistant:
-  - Antarctica is inverted for `84.1°<lat0<90°`. A fix is implemented for the common use case of 90°.
+  - Forward: Antarctica is inverted for `84.1°<lat0<90°`. A fix is implemented for the common use case of 90°.
 - Robinson: 
-  - Boundary maps: country polygons need to be split for `long0≠0`.
-  - Inverse equations do not give the desired results for `long0≠0`. A fix is to bound the longitude to between -180° and 180° but this creates continues maps. A recommendation is instead to shift the centre of image using `MapProjections.recentre`.
+  - Forward: country polygons need to be split for `long0≠0`.
+  - Inverse: these do not  give the desired results for `long0≠0`. A fix is to bound the longitude to between -180° and 180° but this creates continuous maps. A recommendation is instead to shift the centre of image using `MapProjections.recentre`.
 - Tranverse Mercator:
-  - Extended boundary maps have artifacts for `-171°<long0<-140°`. The artifacts lie outside the recommended range of ±15°.
+  - Forward: boundary maps have artifacts for `-171°<long0<-140°`. The artifacts lie outside the recommended range of ±15°.

@@ -126,7 +126,7 @@ end
 
     proj = Robinson(1.0, 0.0, LinearSpline())
     coords_dest = proj(coords_src)
-    @test coords_dest ==  (0.28440209974417663, 0.5030556)
+    @test  all(coords_dest .≈ (0.28440209974417663, 0.5030556))
 
     proj_inv = inv(proj)
     coords_back = proj_inv(coords_dest) 

@@ -26,9 +26,11 @@ end
     nodes = [-2.0, 1.0, 3.0, 7.0]
     values = [5.0, 7.0, 11.0, 34.0]
 
-    interpolater = LinearSpline(nodes, values)
+    spline = LinearSpline(nodes, values)
+    ys = map(spline, nodes)
+    @test ys == values
 
-    y_interp = interpolater(0.0)
+    y_interp = spline(0.0)
     @test y_interp == (6 + 1/3)
 end
 
@@ -36,11 +38,13 @@ end
     nodes = 10:-1.0:0.0
     values = nodes.^2 .+ nodes .+ 3
 
-    interpolater = LinearSpline(nodes, values)
+    spline = LinearSpline(nodes, values)
+    ys = map(spline, nodes)
+    @test ys == values
 
-    y_interp = interpolater(6.3)
+    y_interp = spline(6.3)
     actual = 48.99
-    @test y_interp == 49.2
+    @test isapprox(y_interp, 49.2)
 end
 
 @testset "Lagrange polynomial - degree 3" begin
@@ -102,7 +106,7 @@ end
     ]
     @test spline.coefficients * 11 ≈ expected 
 
-    ys = [spline(x) for x in nodes]
+    ys = map(spline, nodes)
     @test ys ≈ values
 end
 

@@ -4,7 +4,7 @@ export interpolate, linear_interpolation
 export LinearSpline, CubicSpline, SplineRoots
 export lagrange_polynomial, nevilles_algorithm
 export polynomial, polynomial_grad, polynomial_root
-import Base: inv, similar
+import Base: inv, similar, show
 
 function linear_interpolation(x1::Real, y1::Real, x2::Real, y2::Real, x::Real)
     grad = (y2 - y1) / (x2 - x1)
@@ -32,40 +32,44 @@ Linear interpolation between intervals.
 ```
     y = (y1*(x2-x)-y2*(x1-x))/(x2-x1) where xs[idx] < x < xs[idx+1]
 ```
-
-Assumes `intervals` are ordered.
 """
-struct LinearSpline{V1<:AbstractVector, V2<:AbstractVector}
-    intervals::V1
-    values::V2
-    function LinearSpline(intervals::AbstractVector, values::AbstractVector)
-        idxs = sortperm(intervals)
-        sorted_intervals = intervals[idxs]
-        sorted_values = values[idxs]
-        V1 = typeof(sorted_intervals)
-        V2 = typeof(sorted_values)
-        new{V1, V2}(sorted_intervals, sorted_values)
-    end
+struct LinearSpline{V<:AbstractVector, M<:AbstractMatrix}
+    coefficients::M
+    intervals::V
 end
 
-LinearSpline() = LinearSpline(Float64[], Float64[])
+function LinearSpline(intervals::AbstractVector{T}, values::AbstractVector{T}) where T
+    idxs = sortperm(intervals)
+    values = values[idxs]
+    intervals = intervals[idxs]
+    n = length(intervals)
+    coefficients = zeros(T, 2, n - 1)    
+    for (i, j) in zip(1:(n-1), 2:n)
+        grad =  (values[j] - values[i]) / (intervals[j] - intervals[i])
+        inter = values[i]
+        coefficients[:, i] = [inter, grad]
+    end
+    LinearSpline(coefficients, intervals)
+end
+
+LinearSpline() = LinearSpline(Matrix{Float64}(undef, 0, 0), Float64[])
 similar(::LinearSpline, xs, ys) = LinearSpline(xs, ys)
 
-inv(interpolater::LinearSpline) = LinearSpline(interpolater.values, interpolater.intervals)
+inv(spline::LinearSpline) = LinearSpline(map(spline, spline.intervals), spline.intervals)
 
 function interpolate(spline::LinearSpline, x::Real)
-    idx = _get_interval_idx(spline.intervals, x)
-    xs = spline.intervals
-    ys = spline.values
-    linear_interpolation(xs[idx - 1], ys[idx - 1], xs[idx], ys[idx], x)
+    j = _get_interval_idx(spline.intervals, x) - 1
+    coeffs = spline.coefficients[:, j]
+    xj = spline.intervals[j]
+    polynomial(coeffs, x - xj)
 end
 
 (spline::LinearSpline)(x::Real) = interpolate(spline, x)
 
 function show(io::IO, mime::MIME"text/plain", spline::LinearSpline)
     print(io, "LinearSpline(")
-    print(io, spline.intervals, ", ")
-    print(io, spline.values)
+    print(io, spline.coefficients, ", ")
+    print(io, spline.intervals)
     print(io, ")")
 end
 
@@ -141,8 +145,8 @@ That is:
 
 Assumes `xs` are ordered.
 """
-struct CubicSpline{V<:AbstractVector}
-    coefficients::Matrix
+struct CubicSpline{M<:AbstractMatrix, V<:AbstractVector}
+    coefficients::M
     intervals::V
 end
 
@@ -168,7 +172,7 @@ function CubicSpline(xs::AbstractVector{T}, ys::AbstractVector{T}) where T<:Real
     coefficients[2, :] = (ys[col_next] - ys[col]) ./ hs[col] - hs[col] / 3 .* (2 * c[col] + c[col_next])
     coefficients[3, :] = c[col]
     coefficients[4, :] = (c[col_next] - c[col]) ./ (3 * hs[col])
-    CubicSpline{typeof(xs)}(coefficients, xs)
+    CubicSpline{Matrix{T}, typeof(xs)}(coefficients, xs)
 end
 
 CubicSpline() = CubicSpline(zeros(0, 0), zeros(0))
@@ -193,6 +197,11 @@ function show(io::IO, mime::MIME"text/plain", spline::CubicSpline)
     show(io, mime, spline.coefficients)
 end
 
+"""
+    SplineRoots(coefficients, node_intervals, value_intervals)
+
+Finds the roots of the polynomial equations of a spline.
+"""
 struct SplineRoots{V1<:AbstractVector, V2<:AbstractVector}
     coefficients::Matrix
     node_intervals::V1
@@ -214,7 +223,6 @@ function interpolate(inv_spline::SplineRoots, y::Real; num_guesses::Int=5, newto
 end
 
 (inv_spline::SplineRoots)(x::Real) = interpolate(inv_spline, x)
-
 
 ## Polynomials
 

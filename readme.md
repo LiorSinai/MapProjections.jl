@@ -6,7 +6,7 @@ Custom implementations of map common map projections.
 All these projections are supported with forward and inverse equations.
 
 The forward equations are used for directly transforming data of `(longitude, latitude)` pairs.
-This is for example useful for boundary data in `(longitude, latitude)` format.
+This is for useful for boundary data in this format format.
 For a gallery of examples, see [gallery/boundaries](gallery/boundaries).
 
 The inverse equations are used to convert back to `(longitude, latitude)` pairs.
@@ -21,7 +21,7 @@ For a gallery of examples, see [gallery/blue_marble](gallery/blue_marble) or the
 Caveats:
 - This package does not automatically integrate with rasters. Rasters usually come with projection and dimension information. See [Rasters.jl](https://github.com/rafaqz/Rasters.jl/) for a package for reading raster data.
 - This package does not support reading standard CRS formats.
-- For the most, only the spherical versions of projection equations are implemented. An ellipsoidal approximation is implemented for the transverse Mercator projection.
+- For the most part, only the spherical versions of projection equations are implemented. An ellipsoidal approximation is implemented for the transverse Mercator projection.
 
 ## Projections
 
@@ -127,6 +127,7 @@ out_img = reproject_warp(
 save("Robinson.png", out_img)
 ```
 
+Reprojection example:
 <p align="center">
   <img src="gallery/contours_azimuthal.png" width="25%" style="padding:5px"/>
   <img src="gallery/contours_robinson.png" width="50%"  style="padding:5px"/> 

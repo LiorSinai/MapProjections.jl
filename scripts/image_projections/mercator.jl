@@ -27,16 +27,18 @@ out_img = reproject_warp(
 )
 out_img = map(clamp01nan, out_img)
 
+figure_size = (max_figure_size, max_figure_size)
+
 canvas = plot(
     out_img, 
     xlims=(1, width_dest),
     ylims=(1, height_dest),
-    size=(500, 500), 
+    size=figure_size, 
     ticks=:none,
     )
 
 gridlines = make_grid_lines(
-    dest_affine, dest_proj, -180.0:30.0:180.0, -90:30.0:90;num_points=1000
+    dest_affine, dest_proj, -180.0:30.0:180.0, -90:30.0:90; num_points=1000
     );
 
 for line in gridlines

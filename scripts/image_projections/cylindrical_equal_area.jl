@@ -8,12 +8,13 @@ println("CylindricalEqualArea")
 
 dest_proj = CylindricalEqualArea(;k=1.0)
 height, width = size(img)
-width_dest, height_dest, dest_affine = calculate_suggested_transform(src_proj, dest_proj, width, height, src_affine)
+width_dest, height_dest, dest_affine = 
+    calculate_suggested_transform(src_proj, dest_proj, width, height, src_affine)
 println("Source:      ($height, $width)")
 println("Destination: ($height_dest, $width_dest)")
 
 out_img = reproject_warp(
-    img, (height_dest - 1, width_dest), src_proj, dest_proj, src_affine, dest_affine
+    img, (height_dest, width_dest), src_proj, dest_proj, src_affine, dest_affine
     ; method=bilinear
 )
 out_img = map(clamp01nan, out_img)
@@ -27,7 +28,7 @@ canvas = plot(
     out_img, 
     xlims=(1, width_dest),
     ylims=(1, height_dest),
-    size=(500, 160), 
+    size=figure_size, 
     ticks=:none,
     )
 

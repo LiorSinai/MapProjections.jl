@@ -133,6 +133,16 @@ end
     @test coords_back == coords_src
 end
 
+@testset "Sinusoidal" begin
+    proj = Sinusoidal(;radius=1.0)
+    coords_src = (20.0f0, 30.0f0) # degrees
+    coords_dest = proj(coords_src)
+    @test all(coords_dest .≈ (0.30229989149601066, 0.5235987901687622))
+
+    proj_inv = inv(proj)
+    coords_back = proj_inv(coords_dest)
+    @test all(coords_back .≈ coords_src)
+end
 
 @testset "transverse Mercator - r=1" begin
     proj = TransverseMercator(1.0f0, 0.0f0)

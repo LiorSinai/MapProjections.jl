@@ -24,6 +24,28 @@ function _get_interval_idx(
     idx # idx of first value greater than x
 end
 
+abstract type AbstractSpline end
+
+"""
+    interpolate(spline, x)
+
+Evaluate the spline's polynomial `j` at `x`, where:
+
+- `spline.intervals[j] <= x <= spline.intervals[j + 1]`.
+- the coefficients are given by `spline.coefficients[:, j]`.
+
+```
+y = c0 + c1 * x + c2 * x^2 + ... + cn * x^n
+```
+"""
+function interpolate(spline::AbstractSpline, x::Real)
+    j = _get_interval_idx(spline.intervals, x) - 1
+    coeffs = spline.coefficients[:, j]
+    xj = spline.intervals[j]
+    polynomial(coeffs, x - xj)
+end
+
+
 """
     LinearSpline(intervals, values)
 
@@ -33,7 +55,7 @@ Linear interpolation between intervals.
     y = (y2-y1)/(x2-x1)*(x-x1) + y1 where xs[idx] < x < xs[idx+1]
 ```
 """
-struct LinearSpline{V<:AbstractVector, M<:AbstractMatrix}
+struct LinearSpline{V<:AbstractVector, M<:AbstractMatrix} <: AbstractSpline
     coefficients::M
     intervals::V
 end
@@ -56,13 +78,6 @@ LinearSpline() = LinearSpline(Matrix{Float64}(undef, 0, 0), Float64[])
 similar(::LinearSpline, xs, ys) = LinearSpline(xs, ys)
 
 inv(spline::LinearSpline) = LinearSpline(map(spline, spline.intervals), spline.intervals)
-
-function interpolate(spline::LinearSpline, x::Real)
-    j = _get_interval_idx(spline.intervals, x) - 1
-    coeffs = spline.coefficients[:, j]
-    xj = spline.intervals[j]
-    polynomial(coeffs, x - xj)
-end
 
 (spline::LinearSpline)(x::Real) = interpolate(spline, x)
 
@@ -132,7 +147,7 @@ end
 
 """
     CubicSpline(xs, ys)
-    CubicSpline(coefficients, )
+    CubicSpline(coefficients, intervals)
 
 The coefficients for cubic spline interpolation. Extra boundary condition that the second derivatives are zero.
     
@@ -144,8 +159,16 @@ That is:
 ```
 
 Assumes `xs` are ordered.
+
+E.g:
+```
+nodes = [-2.0, 1.0, 3.0, 7.0]
+values = [5.0, 7.0, 11.0, 34.0]
+spline = CubicSpline(nodes, values)
+spline(5.0) # 20.698
+```
 """
-struct CubicSpline{M<:AbstractMatrix, V<:AbstractVector}
+struct CubicSpline{M<:AbstractMatrix, V<:AbstractVector} <: AbstractSpline
     coefficients::M
     intervals::V
 end
@@ -181,13 +204,6 @@ similar(::CubicSpline, xs, ys) = CubicSpline(xs, ys)
 inv(spline::CubicSpline) = 
     SplineRoots(spline.coefficients, spline.intervals, map(spline, spline.intervals))
 
-function interpolate(spline::CubicSpline, x::Real)
-    j = _get_interval_idx(spline.intervals, x) - 1
-    coeffs = spline.coefficients[:, j]
-    xj = spline.intervals[j]
-    polynomial(coeffs, x - xj)
-end
-
 (spline::CubicSpline)(x::Real) = interpolate(spline, x)
  
 function show(io::IO, mime::MIME"text/plain", spline::CubicSpline)
@@ -200,7 +216,17 @@ end
 """
     SplineRoots(coefficients, node_intervals, value_intervals)
 
-Finds the roots of the polynomial equations of a spline.
+The inverse of an `AbstractSpline`.
+Instead of evaluating the polynomial `j` at `x`, this finds the value `x` to produce `y`,
+where `x` is the root of polynomial `j`.
+
+```
+nodes = [-2.0, 1.0, 3.0, 7.0]
+values = [5.0, 7.0, 11.0, 34.0]
+spline = CubicSpline(nodes, values)
+inv_spline = inv(spline)
+inv_spline(20.698) # 4.99995
+```
 """
 struct SplineRoots{V1<:AbstractVector, V2<:AbstractVector}
     coefficients::Matrix
@@ -208,6 +234,16 @@ struct SplineRoots{V1<:AbstractVector, V2<:AbstractVector}
     value_intervals::V2
 end
 
+
+"""
+    interpolate(inv_spline, y)
+
+Given an `inv_spline`, find the root `x` of the relevant polynomial of the spline:
+
+```
+y = c0 + c1 * x + c2 * x^2 + ... + cn * x^n
+```
+"""
 function interpolate(inv_spline::SplineRoots, y::Real; num_guesses::Int=5, newton_options...)
     j = _get_interval_idx(inv_spline.value_intervals, y) - 1
     coeffs = inv_spline.coefficients[:, j]

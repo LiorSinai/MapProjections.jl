@@ -59,12 +59,12 @@ function calculate_suggested_transform(
     width = convert(Float64, width)
     height = convert(Float64, height)
     ## sample points on the boundaries.
-    corners = map(transform, [(1.0, 1.0), (width, 1.0), (width, height), (1.0, height)])
+    corners = map(transform, [(0.0, 0.0), (width, 0.0), (width, height), (0.0, height)])
     xs = (1 + step):step:(width - step)
     ys = (1 + step):step:(height - step)
-    top = [transform((j, 1.0)) for j in xs]
+    top = [transform((j, 0.0)) for j in xs]
     bottom = [transform((j, height)) for j in xs]
-    left = [transform((1.0, i)) for i in ys]
+    left = [transform((0.0, i)) for i in ys]
     right = [transform((width, i)) for i in ys]
     points = vcat(corners, top, bottom, left, right)
     filter!(p -> all(isfinite.(p)), points)
@@ -74,7 +74,9 @@ function calculate_suggested_transform(
     height_dest = ymax - ymin
     ratio = width_dest / height_dest
     ## Same distance for diagonal:
-    ## hs*hs + ws*ws = hd*hd + wd*wd = hd*hd + (hd*r)*(hd*r)
+    ## hs*hs + ws*ws = hd*hd + wd*wd
+    ##               = hd*hd + (hd*r)*(hd*r)
+    ##               = hd*hd (1 + r*r)
     diagonal_src = width * width + height * height
     height_dest = floor(Int, sqrt( diagonal_src / (ratio * ratio + 1.0)))
     width_dest = floor(Int, ratio * height_dest)

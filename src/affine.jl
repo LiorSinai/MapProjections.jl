@@ -53,16 +53,16 @@ end
 """
     affine_from_bounds(west, south, east, north, width, height)
 
-Maps (1, 1) to (west, north) and (width, height) to (east, south).
+Maps (0, 0) to (west, north) and (width, height) to (east, south).
 
 Inputs in (j, i) pixels to (x, y) coordinate.
 """
 function affine_from_bounds(
     west::T, south::T, east::T, north::T, width::Int, height::Int
     ) where T <: AbstractFloat
-    sx = (east - west) / (width - 1)
-    sy = (south - north) / (height - 1)
-    A1 = affine_translation(west - sx, north - sy)
+    sx = (east - west) / width
+    sy = (south - north) / height
+    A1 = affine_translation(west, north)
     A2 = affine_scale(sx, sy)
     AffineTransform{T}(A1.matrix * A2.matrix)
 end

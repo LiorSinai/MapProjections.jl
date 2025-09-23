@@ -47,52 +47,6 @@ end
     @test isapprox(y_interp, 49.2)
 end
 
-@testset "Lagrange polynomial - degree 3" begin
-    nodes = [-2.0, 1.0, 3.0, 7.0]
-    values = [5.0, 7.0, 11.0, 34.0]
-
-    ys = [lagrange_polynomial(nodes, values, x) for x in nodes]
-    @test ys == values
-
-    y_interp = lagrange_polynomial(nodes, values, 0.0)
-    @test y_interp ≈ 1087/180
-end
-
-@testset "Lagrange polynomial - known" begin
-    nodes = [-2.0, 1.0, 3.0, 7.0]
-    values = nodes.^3 + 2 * (nodes.^2) .+ 2.3
-
-    ys = [lagrange_polynomial(nodes, values, x) for x in nodes]
-    @test ys == values
-
-    y_interp = lagrange_polynomial(nodes, values, 1.5)
-    expected = 1.5^3 + 2 * 1.5^2 + 2.3
-    @test y_interp ≈ expected
-end
-
-@testset "Neville's algorithm - degree 3" begin
-    nodes = [-2.0, 1.0, 3.0, 7.0]
-    values = [5.0, 7.0, 11.0, 34.0]
-
-    ys = [nevilles_algorithm(nodes, values, x) for x in nodes]
-    @test ys == values
-
-    y_interp = nevilles_algorithm(nodes, values, 0.0)
-    @test y_interp ≈ 1087/180
-end
-
-@testset "Neville's algorithm - known" begin
-    nodes = [-2.0, 1.0, 3.0, 7.0]
-    values = nodes.^3 + 2 * (nodes.^2) .+ 2.3
-
-    ys = [nevilles_algorithm(nodes, values, x) for x in nodes]
-    @test ys ≈ values
-
-    y_interp = nevilles_algorithm(nodes, values, 1.5)
-    expected = 1.5^3 + 2 * 1.5^2 + 2.3
-    @test y_interp ≈ expected
-end
-
 @testset "CubicSpline - coefficients" begin
     nodes = [0.0, 1.0, 2.0, 2.5]
     values = [0.0, 1.0, 8.0, 9.0]

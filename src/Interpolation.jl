@@ -2,7 +2,6 @@ module Interpolation
 
 export interpolate, linear_interpolation
 export LinearSpline, CubicSpline, SplineRoots
-export lagrange_polynomial, nevilles_algorithm
 export polynomial, polynomial_grad, polynomial_root
 import Base: inv, similar, show
 
@@ -86,63 +85,6 @@ function show(io::IO, mime::MIME"text/plain", spline::LinearSpline)
     print(io, spline.coefficients, ", ")
     print(io, spline.intervals)
     print(io, ")")
-end
-
-"""
-    lagrange_polynomial(nodes, values, x)
-
-Evaluates the Lagrange polynomial through (node, value) pairs at point `x`.
-
-The Lagrange polynomial is the unique polynomial of lowest degree that intersects all data points.
-
-Values near the boundaries are not guaranteed to be smooth.
-
-Sources:
-- https://mathworld.wolfram.com/LagrangeInterpolatingPolynomial.html
-- https://en.wikipedia.org/wiki/Lagrange_polynomial
-"""
-function lagrange_polynomial(
-    nodes::AbstractVector{<:Real}, values::AbstractVector{<:Real}, x::Real
-    )
-    n = length(nodes)
-    y = 0.0
-    for (j, yj) in enumerate(values)
-        ℓ = 1.0
-        for k in [1:(j-1) ; (j+1):n]
-            ℓ *= (x - nodes[k]) / (nodes[j] - nodes[k])
-        end
-        y += yj * ℓ
-    end
-    y
-end
-
-"""
-    nevilles_algorithm(nodes, values, x)
-
-Evaluates the Lagrange polynomial at point `x`.
-
-Values near the boundaries are not guaranteed to be smooth.
-
-Sources:
-- https://mathworld.wolfram.com/NevillesAlgorithm.html
-- https://en.wikipedia.org/wiki/Neville%27s_algorithm
-"""
-function nevilles_algorithm(
-    nodes::AbstractVector{<:Real}, values::AbstractVector{<:Real}, x::Real
-    )
-    n = length(nodes)
-    _nevilles_algorithm(nodes, values, x, 1, n)
-end
-
-function _nevilles_algorithm(
-    nodes::AbstractVector{<:AbstractFloat}, values::AbstractVector{<:AbstractFloat}, x::AbstractFloat, i::Int, j::Int
-    )
-    if (i == j)
-        return values[i]
-    end
-    p1 = _nevilles_algorithm(nodes, values, x, i + 1, j)
-    p2 = _nevilles_algorithm(nodes, values, x, i, j - 1)
-    ((x - nodes[i]) * p1 - (x - nodes[j]) * p2) / (nodes[j] - nodes[i])
 end
 
 """
@@ -282,6 +224,9 @@ function polynomial_grad(coefficients::AbstractVector, x::Real)
     result
 end
 
+"""
+    polynomial_root(coefficients, xmin, xmax, stepsize=)
+"""
 function polynomial_root(coefficients::AbstractVector, range_::AbstractRange, offset::Real=0.0; options...)
     x0 = argmin(x -> abs(polynomial(coefficients, x - offset)), range_)
     newtons_method_polynomial(coefficients, x0, offset; options...)

@@ -1,10 +1,10 @@
-using MapProjections: degree_to_radian, angular_distance
+using MapProjections: angular_distance
 
 function outside_angular_range(long0, lat0, coordinate; min_radius=0.5)
     longitude, latitude = coordinate
-    longitude = degree_to_radian(longitude - long0)
-    latitude = degree_to_radian(latitude)
-    lat0 = degree_to_radian(lat0)
+    longitude = deg2rad(longitude - long0)
+    latitude = deg2rad(latitude)
+    lat0 = deg2rad(lat0)
     c = angular_distance(lat0, longitude, latitude)
     #print(c, " ")
     (abs(c) > π/2) && abs(sin(c)) < min_radius  

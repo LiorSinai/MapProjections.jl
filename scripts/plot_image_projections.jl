@@ -11,7 +11,7 @@ output_dir = "../gallery/blue_marble/"
 img_path = "../data/Blue_Marble_2002.png"
 long_min, long_max = -180.0, 180.0;
 lat_min, lat_max = -90.0, 90.0;
-alpha = 0.5 # transparency for grid lines
+α = 0.5 # transparency for grid lines
 max_figure_size = 500
 
 ## Functions

@@ -46,7 +46,7 @@ gridlines = make_grid_lines(
 for line in gridlines
     xs = [xy[1] for xy in line]
     ys = [xy[2] for xy in line]
-    plot!(canvas, xs, ys, color=:white, label="", alpha=alpha)
+    plot!(canvas, xs, ys, color=:white, label="", alpha=α)
 end
 gridlines = make_grid_lines(
     dest_affine, x -> project(dest_proj_back, x, clip=true), 
@@ -57,7 +57,7 @@ gridlines = make_grid_lines(
 for line in gridlines
     xs = [xy[1] for xy in line]
     ys = [xy[2] for xy in line]
-    plot!(canvas, xs .+ strip_width .+ width_dest, ys, color=:white, label="", alpha=alpha)
+    plot!(canvas, xs .+ strip_width .+ width_dest, ys, color=:white, label="", alpha=α)
 end
 
 output_path = joinpath(output_dir, "orthographic.png")

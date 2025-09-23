@@ -76,7 +76,7 @@ function project(proj::Robinson{T1}, coordinate::Tuple{T2, T2}) where {T1,T2 <: 
     longitude = bound_longitude(longitude - proj.long0)
     x_interp = interpolate(proj.interpolatorX, abs(latitude))
     y_interp = interpolate(proj.interpolatorY, abs(latitude))
-    longitude = degree_to_radian(T1, longitude)
+    longitude = deg2rad(longitude)
     x = proj.radius * 0.8487 * longitude * x_interp
     y = sign(latitude) * proj.radius * 1.3523 * y_interp
     (x, y)
@@ -102,7 +102,7 @@ function project(proj::InverseRobinson{T1}, xy::Tuple{T2, T2}) where {T1,T2 <: A
     latitude = sign(y) * proj.invInterpolatorY(abs(y))
     x_interp = interpolate(proj.interpolatorX, abs(latitude))
     longitude = x / x_interp
-    longitude = radian_to_degree(T1, longitude)
+    longitude = rad2deg(longitude)
     longitude += proj.long0
     promote(longitude, latitude)
 end

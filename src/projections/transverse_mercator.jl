@@ -41,8 +41,8 @@ inv(proj::TransverseMercator) = InverseTransverseMercator(proj.radius, proj.long
 function project(proj::TransverseMercator{T1}, coordinate::Tuple{T2, T2}; extend::Bool=false) where {T1,T2 <: AbstractFloat}
     longitude, latitude = coordinate
     longitude = bound_longitude(longitude - proj.long0)
-    longitude = degree_to_radian(T1, longitude)
-    latitude  = degree_to_radian(T1, latitude)
+    longitude = deg2rad(longitude)
+    latitude  = deg2rad(latitude)
     t = sin(longitude) * cos(latitude)
     x = proj.radius * convert(T1, 0.5) * log((one(T1) + t) / (one(T1) - t))
     y = proj.radius * atan(tan(latitude) * sec(longitude))
@@ -70,8 +70,8 @@ function project(proj::InverseTransverseMercator{T1}, xy::Tuple{T2, T2}) where {
     y = y / proj.radius
     longitude = atan(sinh(x) * sec(y))
     latitude = asin(sech(x) * sin(y))
-    longitude = radian_to_degree(T1, longitude)
-    latitude = radian_to_degree(T1, latitude)
+    longitude = rad2deg(longitude)
+    latitude = rad2deg(latitude)
     longitude += proj.long0
     if abs(y) > π/2
         if longitude < 0
@@ -162,10 +162,10 @@ end
 
 function project(proj::EllipsoidalTransverseMercator{T1}, coordinate::Tuple{T2, T2}) where {T1,T2 <: AbstractFloat}
     longitude, latitude = coordinate
-    latitude  = degree_to_radian(T1, latitude)
+    latitude  = deg2rad(latitude)
     e = sqrt(4*proj.n)/(1+proj.n)
     latitude_conformal = atan(sinh(asinh(tan(latitude)) - e*atanh(e*sin(latitude))))
-    latitude_conformal = radian_to_degree(latitude_conformal)
+    latitude_conformal = rad2deg(latitude_conformal)
     x, y = proj.spherical_crs((longitude, latitude_conformal))
     z_sphere = Complex(y, x)
     S = Sfunc(z_sphere) 
@@ -281,9 +281,9 @@ function project(proj::InverseEllipsoidalTransverseMercator{T1}, xy::Tuple{T2, T
     z_sphere = z + first(Sfunc(z) * proj.Cχμ * proj.N)
     coord_sphere = (imag(z_sphere), real(z_sphere))
     longitude, latitude_conformal = proj.spherical_crs(coord_sphere)
-    latitude_conformal = degree_to_radian(T1, latitude_conformal)
+    latitude_conformal = deg2rad(latitude_conformal)
     latitude = latitude_conformal + first(Sfunc(latitude_conformal) * proj.Cϕχ * proj.N)
-    latitude = radian_to_degree(T1, latitude)
+    latitude = rad2deg(latitude)
     #longitude += proj.long0
     (longitude, latitude)
 end

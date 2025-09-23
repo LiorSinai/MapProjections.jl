@@ -41,8 +41,8 @@ end
 function project(proj::CylindricalEqualArea{T1}, coordinate::Tuple{T2, T2}) where {T1,T2 <: AbstractFloat}
     longitude, latitude = coordinate
     longitude -= proj.long0
-    longitude = degree_to_radian(T1, longitude)
-    latitude  = degree_to_radian(T1, latitude)
+    longitude = convert(T1, deg2rad(longitude))
+    latitude  = convert(T1, deg2rad(latitude))
     x = proj.radius * longitude
     y = proj.radius * sin(latitude)
     (x, y)
@@ -73,8 +73,8 @@ function project(proj::InverseCylindricalEqualArea{T1}, xy::Tuple{T2, T2}) where
     y = y / proj.radius
     longitude = x
     latitude = asin(y)
-    longitude = radian_to_degree(T1, longitude)
-    latitude = radian_to_degree(T1, latitude)
+    longitude = rad2deg(longitude)
+    latitude = rad2deg(latitude)
     longitude += proj.long0
     (longitude, latitude)
 end

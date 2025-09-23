@@ -42,8 +42,8 @@ inv(proj::Mercator) = InverseMercator(proj.radius, proj.long0)
 function project(proj::Mercator{T1}, coordinate::Tuple{T2, T2}; atol=1e-6) where {T1,T2 <: AbstractFloat}
     longitude, latitude = coordinate
     longitude -= proj.long0
-    longitude = degree_to_radian(T1, longitude)
-    latitude  = degree_to_radian(T1, latitude)
+    longitude = deg2rad(longitude)
+    latitude  = deg2rad(latitude)
     x = proj.radius * longitude
     angle = convert(T1, π/4)  + latitude/2
     at_pole = abs(abs(angle) - π/2) < atol
@@ -69,8 +69,8 @@ function project(proj::InverseMercator{T1}, xy::Tuple{T2, T2}) where {T1,T2 <: A
     y = y / proj.radius
     longitude = x
     latitude = 2 * atan(exp(y)) - convert(T1, π/2)
-    longitude = radian_to_degree(T1, longitude)
-    latitude = radian_to_degree(T1, latitude)
+    longitude = rad2deg(longitude)
+    latitude = rad2deg(latitude)
     longitude += proj.long0
     (longitude, latitude)
 end

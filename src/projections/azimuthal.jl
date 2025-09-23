@@ -101,9 +101,9 @@ function project(
         ) where {T1,T2 <: AbstractFloat}
         longitude, latitude = coordinate
     longitude, latitude = coordinate
-    longitude = degree_to_radian(T1, longitude - proj.long0)
-    latitude  = degree_to_radian(T1, latitude)
-    lat0 = degree_to_radian(T1, proj.lat0)
+    longitude = convert(T1, deg2rad(longitude - proj.long0))
+    latitude  = convert(T1, deg2rad(latitude))
+    lat0 = convert(T1, deg2rad(proj.lat0))
     x, y = _project_azimuthal(proj.radius, lat0, longitude, latitude)
     if !wrap && !(in_angular_range(lat0, longitude, latitude; atol=atol))
         if clip
@@ -143,10 +143,10 @@ end
 inv(proj::InverseOrthographic) = Orthographic(proj.radius, proj.long0, proj.lat0)
 
 function project(proj::InverseOrthographic{T1}, xy::Tuple{T2, T2}) where {T1,T2 <: AbstractFloat}
-    lat0 = degree_to_radian(T1, proj.lat0)
+    lat0 = deg2rad(proj.lat0)
     longitude, latitude = _inv_azimuthal(proj.radius, lat0, xy[1], xy[2], one(T1), asin)
-    longitude = radian_to_degree(T1, longitude)
-    latitude = radian_to_degree(T1, latitude)
+    longitude = rad2deg(longitude)
+    latitude = rad2deg(latitude)
     longitude += proj.long0
     if longitude < -180
         longitude += 360
@@ -200,9 +200,9 @@ function project(
     ) where {T1,T2 <: AbstractFloat}
     longitude, latitude = coordinate
     longitude, latitude = coordinate
-    longitude = degree_to_radian(T1, longitude - proj.long0)
-    latitude  = degree_to_radian(T1, latitude)
-    lat0 = degree_to_radian(T1, proj.lat0)
+    longitude = deg2rad(longitude - proj.long0)
+    latitude  = deg2rad(latitude)
+    lat0 = deg2rad(proj.lat0)
     if lat0 ≈ π/2
         # Antarctica is not rendered properly for 84°-90°.
         # This provides a fix for lat0=90° and is also more computationally efficient.
@@ -238,10 +238,10 @@ end
 inv(proj::InverseAzimuthalEquidistant) = AzimuthalEquidistant(proj.radius, proj.long0, proj.lat0)
 
 function project(proj::InverseAzimuthalEquidistant{T1}, xy::Tuple{T2, T2}) where {T1,T2 <: AbstractFloat}
-    lat0 = degree_to_radian(T1, proj.lat0)
+    lat0 = deg2rad(proj.lat0)
     longitude, latitude = _inv_azimuthal(proj.radius, lat0, xy[1], xy[2], π, identity)
-    longitude = radian_to_degree(T1, longitude)
-    latitude = radian_to_degree(T1, latitude)
+    longitude = rad2deg(longitude)
+    latitude = rad2deg(latitude)
     longitude += proj.long0
     if longitude < -180
         longitude += 360

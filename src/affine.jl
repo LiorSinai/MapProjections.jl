@@ -4,6 +4,17 @@
 Maps ``(x', y')`` to ``(λ, ϕ)`` where λ is the longitude and ϕ is the latitude. 
 
 Note that for images, one needs to map ``(j, i)`` to ``(x', y')``.
+
+The affine matrix is constructed as follows:
+```
+| sx   sxy Δx |
+| syx  sy  Δy |
+| 0    0   1  |
+```
+where:
+- `sx` and `sy` are the scale.
+- `sxy` and `syx` are shearing and scaling.
+- `Δx` and `Δy` are translations from the origin.
 """
 struct AffineTransform{T}
     matrix::Matrix{T}

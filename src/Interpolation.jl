@@ -36,6 +36,8 @@ Evaluate the spline's polynomial `j` at `x`, where:
 ```
 y = c0 + c1 * x + c2 * x^2 + ... + cn * x^n
 ```
+where `ci=spline.coefficients[i + 1, j]`.
+
 """
 function interpolate(spline::AbstractSpline, x::Real)
     j = _get_interval_idx(spline.intervals, x) - 1
@@ -52,6 +54,14 @@ Linear interpolation between intervals.
 
 ```
     y = (y2-y1)/(x2-x1)*(x-x1) + y1 where xs[idx] < x < xs[idx+1]
+```
+
+E.g:
+```
+nodes = [-2.0, 1.0, 3.0, 7.0]
+values = [5.0, 7.0, 11.0, 34.0]
+spline = LinearSpline(nodes, values)
+spline(5.0) # 22.5
 ```
 """
 struct LinearSpline{V<:AbstractVector, M<:AbstractMatrix} <: AbstractSpline
@@ -159,7 +169,7 @@ end
     SplineRoots(coefficients, node_intervals, value_intervals)
 
 The inverse of an `AbstractSpline`.
-Instead of evaluating the polynomial `j` at `x`, this finds the value `x` to produce `y`,
+Instead of evaluating the polynomial `j` at `x` to find `y`, this finds the value `x` to produce `y`,
 where `x` is the root of polynomial `j`.
 
 ```
@@ -186,14 +196,14 @@ Given an `inv_spline`, find the root `x` of the relevant polynomial of the splin
 y = c0 + c1 * x + c2 * x^2 + ... + cn * x^n
 ```
 """
-function interpolate(inv_spline::SplineRoots, y::Real; num_guesses::Int=5, newton_options...)
+function interpolate(inv_spline::SplineRoots, y::Real; options...)
     j = _get_interval_idx(inv_spline.value_intervals, y) - 1
     coeffs = inv_spline.coefficients[:, j]
     coeffs[1] -= y
     xj = inv_spline.node_intervals[j]
     xk = inv_spline.node_intervals[j + 1]
-    r = range(xj, xk, num_guesses)
-    root = polynomial_root(coeffs, r, xj; newton_options...)
+    root = polynomial_root(coeffs, 0.0, xk - xj; options...)
+    root += xj
     if !(root >= xj) || !(root <= xk)
         throw(DomainError(root, "root not in interval range ($xj, $xk)"))
     end
@@ -204,6 +214,15 @@ end
 
 ## Polynomials
 
+""" 
+    polynomial(coefficients, x)
+
+Evaluate the polynomial `x`:
+```
+y = c0 + c1 * x + c2 * x^2 + ... + cn * x^n
+```
+where `ci=coefficients[i + 1, j]`.
+"""
 function polynomial(coefficients::AbstractVector, x::Real)
     result = 0.0
     xpow = 1.0
@@ -214,6 +233,15 @@ function polynomial(coefficients::AbstractVector, x::Real)
     result
 end
 
+""" 
+    polynomial_grad(coefficients, x)
+
+Evaluate the polynomial gradiant at `x`:
+```
+dy = c1 + (2 * c2 * x) + ... + (n * cn * x^(n-1))
+```
+where `ci=coefficients[i + 1, j]`.
+"""
 function polynomial_grad(coefficients::AbstractVector, x::Real)
     result = 0.0
     xpow = 1.0
@@ -225,28 +253,42 @@ function polynomial_grad(coefficients::AbstractVector, x::Real)
 end
 
 """
-    polynomial_root(coefficients, xmin, xmax, stepsize=)
+    polynomial_root(coefficients, xmin, xmax; steps=5, atol=1e-6, max_iters=10)
+
+Find the root of a polynomial starting in a given range. Note that the result can be outside of this range.
+
+That is, find `x` such that:
+```
+0 = c0 + c1 * x + c2 * x^2 + ... + cn * x^n
+```
+where `ci=coefficients[i+1]`.
+
+First does a coarse estimate by dividing the range into `steps` and finding the nearest point.
+(A more efficient way to do this is binary search.)
+Then it refines this estimate with Newton's Method.
+
 """
-function polynomial_root(coefficients::AbstractVector, range_::AbstractRange, offset::Real=0.0; options...)
-    x0 = argmin(x -> abs(polynomial(coefficients, x - offset)), range_)
-    newtons_method_polynomial(coefficients, x0, offset; options...)
+function polynomial_root(coefficients::AbstractVector, x_min::Real, x_max::Real; steps::Int=5, options...)
+    r = range(x_min, x_max, steps)
+    x0 = argmin(x -> abs(polynomial(coefficients, x)), r)
+    newtons_method_polynomial(coefficients, x0; options...)
 end
 
 function newtons_method_polynomial(
-    coefficients::AbstractVector, x0::Real, offset::Real=0.0
+    coefficients::AbstractVector, x0::Real,
     ; atol::AbstractFloat=1e-6, max_iters::Int=10
     )
     xi = x0
-    yi = polynomial(coefficients, xi - offset)
+    yi = polynomial(coefficients, xi)
     iters = 0
     while iters <= max_iters && abs(yi) > atol
         iters += 1
-        ygrad = polynomial_grad(coefficients, xi - offset)
+        ygrad = polynomial_grad(coefficients, xi)
         if abs(ygrad) < atol 
             return NaN # failure
         end
         xi = xi - yi / ygrad
-        yi = polynomial(coefficients, xi - offset)
+        yi = polynomial(coefficients, xi)
     end
     xi
 end

@@ -59,17 +59,19 @@ function calculate_suggested_transform(
     width = convert(Float64, width)
     height = convert(Float64, height)
     ## sample points on the boundaries.
-    corners = map(transform, [(0.0, 0.0), (width, 0.0), (width, height), (0.0, height)])
-    xs = (1 + step):step:(width - step)
-    ys = (1 + step):step:(height - step)
-    top = [transform((j, 0.0)) for j in xs]
-    bottom = [transform((j, height)) for j in xs]
-    left = [transform((0.0, i)) for i in ys]
-    right = [transform((width, i)) for i in ys]
+    corners = [(0.0, 0.0), (width, 0.0), (width, height), (0.0, height)]
+    xs = 1:step:(width - step)
+    ys = 1:step:(height - step)
+    top = [(j, 0.0) for j in xs]
+    bottom = [(j, height) for j in xs]
+    left = [(0.0, i) for i in ys]
+    right = [(width, i) for i in ys]
     points = vcat(corners, top, bottom, left, right)
-    filter!(p -> all(isfinite.(p)), points)
+    transformed = map(transform, points)
+    filter!(p -> all(isfinite.(p)), transformed)
     ## get bounds
-    xmin, ymin, xmax, ymax = _bounds(points)
+    println(_bounds(transformed))
+    xmin, ymin, xmax, ymax = _bounds(transformed)
     width_dest = xmax - xmin
     height_dest = ymax - ymin
     ratio = width_dest / height_dest

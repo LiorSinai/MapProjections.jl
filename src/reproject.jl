@@ -66,6 +66,17 @@ This is intended to approximately preserve the resolution of the input data in t
 
 By default, samples are taking on the borders with approximately `steps` per border.
 For most projections the border defines the extent of the projection, but this is not necessarily true.
+For example, for Azimuthal projections (`Orthographic` or `AzimuthalEquidistant`),
+the extent is dependent on the angular distance and not the image borders.
+See these projections for suggested transforms.
+
+Alternatively, this calculates the samples for an Orthographic Projection:
+```
+longs = -pi:0.01:pi # or desired range
+lats = -atan.(cos.(longs .- long0) / tan(lat0)) # See angular_distance. long0, lat0 in radians
+samples = map(xy -> inv_affine(rad2deg.(xy)), zip(longs, lats))
+```
+
 """
 function calculate_suggested_transform(
     src_crs, dest_crs, width::Int, height::Int, src_affine::AffineTransform, samples::AbstractVector{<:Tuple}

@@ -80,6 +80,11 @@ coords_src = (20.0f0, 30.0f0) # (longitude, latitude) degrees
 coords_dest = proj(coords_src) # (1.89e6, 3.19e6)
 ```
 
+The suggested affine transform with `r=proj.radius` and output length `l` is:
+```
+affine_from_bounds(-r, -r, r, r, l, l)
+```
+
 References
 - https://en.wikipedia.org/wiki/Orthographic_map_projection
 - https://mathworld.wolfram.com/OrthographicProjection.html 
@@ -190,6 +195,11 @@ Inputs should be in degrees:
 proj = AzimuthalEquidistant()
 coords_src = (20.0f0, 30.0f0) # (longitude, latitude) degrees
 coords_dest = proj(coords_src) # (2.01f6, 3.40f6)
+```
+
+The suggested affine transform with `r = pi * proj.radius` and output length `l` is:
+```
+affine_from_bounds(-r, -r, r, r, l, l)
 ```
 
 References

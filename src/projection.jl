@@ -28,11 +28,6 @@ Project the coordinate onto a new set of coordinates.
 """
 function project end
 
-degree_to_radian(x::T) where {T<:AbstractFloat} = x * π / 180
-degree_to_radian(::Type{T}, x::AbstractFloat) where {T<:AbstractFloat} = convert(T, x * π / 180)
-radian_to_degree(x::T) where {T<:AbstractFloat} = x * 180 / π
-radian_to_degree(::Type{T}, x::AbstractFloat) where {T<:AbstractFloat} = convert(T, x * 180 / π)
-
 function bound_longitude(x::AbstractFloat)
     if (x < -180)
         return x + 360
@@ -62,11 +57,3 @@ function earth_radius_at_latitude(latitude::AbstractFloat=35.196f0)
     radius = a * b / sqrt(b^2 * cos(latitude)^2 + a^2 * sin(latitude)^2)
     radius
 end
-
-### constants
-SEMI_MAJOR_AXIS_WGS_84 = 6_378_137.0f0
-INV_FLATTENING_WGS_84 = 298.257223563f0
-SEMI_MINOR_AXIS_WGS_84 = SEMI_MAJOR_AXIS_WGS_84 * (1 - 1/INV_FLATTENING_WGS_84)
-## The oblate ellipsoid has 2 of the same major semi-axis (x and y radii) and a slightly flatter minor axis (z radius).
-MEAN_RADIUS_WGS_84 = (2 * SEMI_MAJOR_AXIS_WGS_84 + SEMI_MINOR_AXIS_WGS_84) / 3
-AUTHALIC_RADIUS_WGS_84 = 6_371_007.2f0 # radius of sphere with same surface area as ellipsoid

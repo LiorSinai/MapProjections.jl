@@ -20,7 +20,7 @@ end
     coords_src = (20.0f0, 30.0f0) # degrees
     coords_dest = proj(coords_src)
     @test coords_dest isa Tuple{Float32, Float32}
-    @test coords_dest == (0.31607082f0, 0.53354627f0)
+    @test coords_dest == (0.3160708f0, 0.53354627f0)
 
     proj_inv = inv(proj)
     coords_back = proj_inv(coords_dest) 
@@ -95,7 +95,7 @@ end
     coords_src = (20.0f0, 30.0f0) # degrees
     coords_dest = proj(coords_src)
     @test coords_dest isa Tuple{Float32, Float32}
-    @test coords_dest == (0.29619813f0, 0.5f0)
+    @test coords_dest == (0.2961981f0, 0.5f0)
 
     proj_inv = inv(proj)
     coords_back = proj_inv(coords_dest) 
@@ -107,7 +107,7 @@ end
     coords_src = (20.0f0, 30.0f0) # degrees
     coords_dest = proj(coords_src)
     @test coords_dest isa Tuple{Float32, Float32}
-    @test coords_dest == (0.29619813f0, 0.27233657f0)
+    @test coords_dest == (0.2961981f0, 0.27233657f0)
 
     proj_inv = inv(proj)
     coords_back = proj_inv(coords_dest) 
@@ -118,7 +118,7 @@ end
     proj = Robinson(1.0f0, 0.0f0, CubicSpline())
     coords_src = (20.0f0, 30.0f0) # degrees
     coords_dest = proj(coords_src)
-    @test coords_dest == (0.28440211575222013, 0.5030556)
+    @test coords_dest == (0.2844020914707184, 0.5030556)
 
     proj_inv = inv(proj)
     coords_back = proj_inv(coords_dest) 
@@ -174,7 +174,7 @@ end
     proj = TransverseMercator(1.0f0, 0.0f0)
     coords_src = (150.0f0, 15.0f0) # degrees
     coords_dest = project(proj, coords_src; extend=true)
-    @test all(coords_dest .== (0.5268411f0, 2.8415337f0))
+    @test all(coords_dest .== (0.5268414f0, 2.8415337f0))
 
     proj_inv = inv(proj)
     coords_back = project(proj_inv, coords_dest) 
@@ -182,7 +182,7 @@ end
 
     coords_src = (-150.0f0, 15.0f0) # degrees
     coords_dest = project(proj, coords_src; extend=true)
-    @test all(coords_dest .== (-0.5268411f0, 2.8415337f0))
+    @test all(coords_dest .== (-0.5268414f0, 2.8415337f0))
 
     proj_inv = inv(proj)
     coords_back = project(proj_inv, coords_dest) 

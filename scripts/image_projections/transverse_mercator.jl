@@ -67,8 +67,8 @@ gridlines = make_grid_lines(
 for line in gridlines
     xs = [xy[1] for xy in line]
     ys = [xy[2] for xy in line]
-    plot!(canvas, xs, ys, color=:white, label="", alpha=alpha)
-    plot!(canvas, xs, ys .+ height_dest, color=:white, label="", alpha=alpha)
+    plot!(canvas, xs, ys, color=:white, label="", alpha=α)
+    plot!(canvas, xs, ys .+ height_dest, color=:white, label="", alpha=α)
 end
 
 output_path = joinpath(output_dir, "transverse_mercator.png")

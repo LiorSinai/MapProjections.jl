@@ -1,3 +1,19 @@
+"""
+    angular_distance(lat0, longitude, latitude)
+
+Inputs are in radians.
+
+The central angle θ subtended by the radii through two points on a sphere, where:
+```math
+n_a = (cos(latitude) * cos(longitude), cos(latitude) * sin(longitude), sin(latitude))   
+n_b = (cos(lat0), 0, sin(lat0))
+cos(θ) = n_a ⋅ n_b
+       = sin(lat0) * sin(latitude) + cos(lat0) * cos(latitude) * cos(longitude)
+```
+
+References:
+- https://en.wikipedia.org/wiki/Angular_distance
+"""
 function angular_distance(
     lat0::AbstractFloat, 
     longitude::AbstractFloat, 
@@ -12,7 +28,7 @@ function in_angular_range(
     latitude::AbstractFloat;
     atol::AbstractFloat = 1e-4
     )
-    c = acos(sin(lat0) * sin(latitude) + cos(lat0) * cos(latitude) * cos(longitude))
+    c = angular_distance(lat0, longitude, latitude)
     abs(c) < π/2 - atol
 end
 
@@ -25,7 +41,7 @@ function _project_azimuthal(
 end
 
 function _inv_azimuthal(
-    radius::T, lat0::T, x::T, y::T, max_radius::Number, angular_distance_func
+    radius::T, lat0::T, x::T, y::T, max_radius::Real, angular_distance_func
     ) where {T <: AbstractFloat}
     x = x / (radius)
     y = y / (radius)
@@ -64,6 +80,11 @@ coords_src = (20.0f0, 30.0f0) # (longitude, latitude) degrees
 coords_dest = proj(coords_src) # (1.89e6, 3.19e6)
 ```
 
+The suggested affine transform with `r=proj.radius` and output length `l` is:
+```
+affine_from_bounds(-r, -r, r, r, l, l)
+```
+
 References
 - https://en.wikipedia.org/wiki/Orthographic_map_projection
 - https://mathworld.wolfram.com/OrthographicProjection.html 
@@ -84,26 +105,26 @@ end
 inv(proj::Orthographic) = InverseOrthographic(proj.radius, proj.long0, proj.lat0)
 
 """
-    project(proj::Orthographic, coordinate; wrap=false, clip=true, atol=1e-4)
+    project(proj::Orthographic, coordinate; wrap=false, clip=false, atol=1e-4)
 
 Project coordinate onto an Orthographic projection.
 
 Options:
-- `wrap`: if true, return all coordinates including those out of view. Takes precedence.
-- `clip`: if true return `(NaN, NaN)` for all coordinates out of view.
+- `wrap`: if true, return all coordinates including those out of view. Has the effect of overlaying the back of the sphere onto the front. Takes precedence over `clip`.
+- `clip`: if true return `(NaN, NaN)` for all coordinates out of view. Otherwise, plot them on the edge, which has the effect of creating smooth borders.
 - `atol`: tolerance for `in_angular_range`.
 
 If `wrap` is false and so is `clip`, project coordinates to the edge for a smooth appearance. 
 """
 function project(
         proj::Orthographic{T1}, coordinate::Tuple{T2, T2};
-        wrap::Bool=false, clip::Bool=true, atol=1e-4
+        wrap::Bool=false, clip::Bool=false, atol::AbstractFloat=1e-4
         ) where {T1,T2 <: AbstractFloat}
         longitude, latitude = coordinate
     longitude, latitude = coordinate
-    longitude = degree_to_radian(T1, longitude - proj.long0)
-    latitude  = degree_to_radian(T1, latitude)
-    lat0 = degree_to_radian(T1, proj.lat0)
+    longitude = convert(T1, deg2rad(longitude - proj.long0))
+    latitude  = convert(T1, deg2rad(latitude))
+    lat0 = convert(T1, deg2rad(proj.lat0))
     x, y = _project_azimuthal(proj.radius, lat0, longitude, latitude)
     if !wrap && !(in_angular_range(lat0, longitude, latitude; atol=atol))
         if clip
@@ -143,10 +164,10 @@ end
 inv(proj::InverseOrthographic) = Orthographic(proj.radius, proj.long0, proj.lat0)
 
 function project(proj::InverseOrthographic{T1}, xy::Tuple{T2, T2}) where {T1,T2 <: AbstractFloat}
-    lat0 = degree_to_radian(T1, proj.lat0)
+    lat0 = deg2rad(proj.lat0)
     longitude, latitude = _inv_azimuthal(proj.radius, lat0, xy[1], xy[2], one(T1), asin)
-    longitude = radian_to_degree(T1, longitude)
-    latitude = radian_to_degree(T1, latitude)
+    longitude = rad2deg(longitude)
+    latitude = rad2deg(latitude)
     longitude += proj.long0
     if longitude < -180
         longitude += 360
@@ -176,6 +197,11 @@ coords_src = (20.0f0, 30.0f0) # (longitude, latitude) degrees
 coords_dest = proj(coords_src) # (2.01f6, 3.40f6)
 ```
 
+The suggested affine transform with `r = pi * proj.radius` and output length `l` is:
+```
+affine_from_bounds(-r, -r, r, r, l, l)
+```
+
 References
 - https://en.wikipedia.org/wiki/Azimuthal_equidistant_projection
 - https://mathworld.wolfram.com/AzimuthalEquidistantProjection.html
@@ -200,9 +226,9 @@ function project(
     ) where {T1,T2 <: AbstractFloat}
     longitude, latitude = coordinate
     longitude, latitude = coordinate
-    longitude = degree_to_radian(T1, longitude - proj.long0)
-    latitude  = degree_to_radian(T1, latitude)
-    lat0 = degree_to_radian(T1, proj.lat0)
+    longitude = deg2rad(longitude - proj.long0)
+    latitude  = deg2rad(latitude)
+    lat0 = deg2rad(proj.lat0)
     if lat0 ≈ π/2
         # Antarctica is not rendered properly for 84°-90°.
         # This provides a fix for lat0=90° and is also more computationally efficient.
@@ -225,9 +251,9 @@ function show(io::IO, mime::MIME"text/plain", proj::AzimuthalEquidistant)
 end
 
 """
-    InverseOrthographic(radius, long0, lat0)
+    InverseAzimuthalEquidistant(radius, long0, lat0)
 
-Convert `(x, y)` co-ordinates in a `Orthographic` projection back to `(longitude, latitude)`. 
+Convert `(x, y)` co-ordinates in a `AzimuthalEquidistant` projection back to `(longitude, latitude)`. 
 """
 struct InverseAzimuthalEquidistant{T<:AbstractFloat} <: AbstractProjection
     radius::T
@@ -238,10 +264,10 @@ end
 inv(proj::InverseAzimuthalEquidistant) = AzimuthalEquidistant(proj.radius, proj.long0, proj.lat0)
 
 function project(proj::InverseAzimuthalEquidistant{T1}, xy::Tuple{T2, T2}) where {T1,T2 <: AbstractFloat}
-    lat0 = degree_to_radian(T1, proj.lat0)
+    lat0 = deg2rad(proj.lat0)
     longitude, latitude = _inv_azimuthal(proj.radius, lat0, xy[1], xy[2], π, identity)
-    longitude = radian_to_degree(T1, longitude)
-    latitude = radian_to_degree(T1, latitude)
+    longitude = rad2deg(longitude)
+    latitude = rad2deg(latitude)
     longitude += proj.long0
     if longitude < -180
         longitude += 360

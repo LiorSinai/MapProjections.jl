@@ -38,35 +38,53 @@ function reproject(multipolygon::Vector{Vector{Vector{NTuple{D, T}}}}, src_crs, 
     coordinates
 end
 
+function boundary_samples(width::Int, height::Int; steps::Int=20)
+    width = convert(Float64, width)
+    height = convert(Float64, height)
+    stepsize = max((width - 1)/ steps, (height - 1)/steps)
+    corners = [(0.0, 0.0), (width, 0.0), (width, height), (0.0, height)]
+    xs = 1:stepsize:(width - stepsize)
+    ys = 1:stepsize:(height - stepsize)
+    top = [(j, 0.0) for j in xs]
+    bottom = [(j, height) for j in xs]
+    left = [(0.0, i) for i in ys]
+    right = [(width, i) for i in ys]
+    points = vcat(corners, top, bottom, left, right)
+    points
+end
+
 """
-    calculate_suggested_transform(src_crs, dest_crs, width, height, src_transform; num_steps=20)
+    calculate_suggested_transform(
+        src_crs, dest_crs,width, height, src_transform, [samples]
+        ; steps=20
+    )
 
 Inspired by GDAL's `GDALSuggestedWarpOutput()`. Outputs an image shape and a transform for warping.
 
 The scale is computed so that the distance from the top left corner to the bottom right corner is the same number of pixels as the original image.
 This is intended to approximately preserve the resolution of the input data in the output file.
 
-Samples are taking on the borders with approximately `num_steps` per border.
-The border is assumed to defined the extent of the projection.
-Note this assumption does not hold for all projections.
+By default, samples are taking on the borders with approximately `steps` per border.
+For most projections the border defines the extent of the projection, but this is not necessarily true.
+For example, for Azimuthal projections (`Orthographic` or `AzimuthalEquidistant`),
+the extent is dependent on the angular distance and not the image borders.
+See these projections for suggested transforms.
+
+Alternatively, this calculates the samples for an Orthographic Projection:
+```
+longs = -pi:0.01:pi # or desired range
+lats = -atan.(cos.(longs .- long0) / tan(lat0)) # See angular_distance. long0, lat0 in radians
+samples = map(xy -> inv_affine(rad2deg.(xy)), zip(longs, lats))
+```
+
 """
 function calculate_suggested_transform(
-    src_crs, dest_crs, width::Int, height::Int, src_affine::AffineTransform; num_steps::Int=20
+    src_crs, dest_crs, width::Int, height::Int, src_affine::AffineTransform, samples::AbstractVector{<:Tuple}
     )
-    step = max((width - 1)/ num_steps, (height - 1)/num_steps)
     inv_src_crs = inv(src_crs)
+    # (j, i) -> (x, y) -> (long, lat) -> (x, y)
     transform = xy -> xy |> src_affine |> inv_src_crs |> dest_crs
-    width = convert(Float64, width)
-    height = convert(Float64, height)
-    ## sample points on the boundaries.
-    corners = map(transform, [(1.0, 1.0), (width, 1.0), (width, height), (1.0, height)])
-    xs = (1 + step):step:(width - step)
-    ys = (1 + step):step:(height - step)
-    top = [transform((j, 1.0)) for j in xs]
-    bottom = [transform((j, height)) for j in xs]
-    left = [transform((1.0, i)) for i in ys]
-    right = [transform((width, i)) for i in ys]
-    points = vcat(corners, top, bottom, left, right)
+    points = map(transform, samples)
     filter!(p -> all(isfinite.(p)), points)
     ## get bounds
     xmin, ymin, xmax, ymax = _bounds(points)
@@ -74,12 +92,21 @@ function calculate_suggested_transform(
     height_dest = ymax - ymin
     ratio = width_dest / height_dest
     ## Same distance for diagonal:
-    ## hs*hs + ws*ws = hd*hd + wd*wd = hd*hd + (hd*r)*(hd*r)
+    ## hs*hs + ws*ws = hd*hd + wd*wd
+    ##               = hd*hd + (hd*r)*(hd*r)
+    ##               = hd*hd (1 + r*r)
     diagonal_src = width * width + height * height
     height_dest = floor(Int, sqrt( diagonal_src / (ratio * ratio + 1.0)))
     width_dest = floor(Int, ratio * height_dest)
     dest_affine = affine_from_bounds(xmin, ymin, xmax, ymax, width_dest, height_dest)
     width_dest, height_dest, dest_affine
+end
+
+function calculate_suggested_transform(
+    src_crs, dest_crs, width::Int, height::Int, src_affine::AffineTransform; steps::Int=20
+    )
+    samples = boundary_samples(width, height; steps=steps)
+    calculate_suggested_transform(src_crs, dest_crs, width, height, src_affine, samples)
 end
 
 function _bounds(points::Vector{<:Tuple{T, T}}) where T
